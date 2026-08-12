@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Customer Dashboard - MediCare AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #f8fbff;
+            color: #1f2937;
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 16px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            width: 100%;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #1677ff;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #1677ff, #0ea5e9);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(22, 119, 255, 0.3);
+        }
+
+        .logo span {
+            color: #12b886;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+            list-style: none;
+            align-items: center;
+            white-space: nowrap;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #374151;
+            font-weight: 600;
+            font-size: 15px;
+            transition: 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: #1677ff;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 40px auto;
+        }
+
+        h1 {
+            color: #12355b;
+            margin-bottom: 8px;
+            font-size: 32px;
+        }
+
+        .report-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+            border: 1px solid #e2e8f0;
+            border-left: 6px solid #1677ff;
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .report-disease {
+            font-size: 24px;
+            font-weight: bold;
+            color: #12355b;
+            margin-bottom: 6px;
+        }
+
+        .report-date {
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #1677ff;
+            margin: 16px 0 6px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-text {
+            font-size: 15px;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .medicine-list {
+            list-style: none;
+            margin-top: 5px;
+        }
+
+        .medicine-list li {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #1e293b;
+            border-left: 4px solid #12b886;
+        }
+
+        .no-records {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+        }
+
+        @media(max-width: 768px) {
+            .report-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .nav-links {
+                gap: 15px;
+                font-size: 14px;
+            }
+
+            .navbar {
+                padding: 15px 4%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Professional Navbar -->
+    <nav class="navbar">
+        <a href="/" class="logo">
+            <div class="logo-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2a10 10 0 1 0 10 10H12V2z" />
+                    <path d="M12 12L2.7 9.3" />
+                    <path d="M12 12l9.3 2.7" />
+                </svg>
+            </div>
+            MediCare <span>AI</span>
+        </a>
+        <ul class="nav-links">
+            {% if not current_user.is_authenticated %}
+            <li><a href="/auth" style="color: #1677ff; font-weight: bold;">Sign In / Register</a></li>
+            {% endif %}
+            <li><a href="/about">About</a></li>
+            <li><a href="/">Diagnosis</a></li>
+            <li><a href="/contact">Contact</a></li>
+
+            {% if current_user.is_authenticated %}
+            <li><a href="/dashboard" style="color: #1677ff; font-weight: bold;">Dashboard</a></li>
+            {% if current_user.email == 'gulafshag178@gmail.com' %}
+            <li><a href="/admin-dashboard" style="color: #0284c7; font-weight: bold;">Admin Panel</a></li>
+            {% endif %}
+            <li><a href="/logout" style="color: #b91c1c;">Logout</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <!-- Main Content Container (Properly placed outside the navbar) -->
+    <div class="container">
+        <h1>Welcome, {{ current_user.username }}!</h1>
+        <p style="color: #64748b; margin-bottom: 25px;">Your complete diagnosis and medical recommendation history.</p>
+
+        {% if history %}
+        {% for report in history %}
+        <div class="report-card">
+            <div class="report-header">
+                <div>
+                    <div class="report-disease">🩺 {{ report.disease }}</div>
+                    <div class="badge">Confidence: {{ report.confidence }}% &bull; Risk: {{ report.risk | upper }}</div>
+                </div>
+                <div class="report-date">📅 {{ report.timestamp }}</div>
+            </div>
+
+            <div class="section-title">Analyzed Symptoms</div>
+            <div class="info-text">{{ report.symptoms }}</div>
+
+            <div class="section-title">Condition Description</div>
+            <div class="info-text">{{ report.description }}</div>
+
+            <div class="section-title">Recommended Medicines</div>
+            <ul class="medicine-list">
+                {% for med in report.medicines %}
+                <li>💊 {{ med }}</li>
+                {% endfor %}
+            </ul>
+
+            <div class="section-title">Precautions & Diet</div>
+            <div class="info-text"
+                style="background: #f8fafc; padding: 14px; border-radius: 10px; border: 1px solid #e2e8f0; margin-top: 5px;">
+                <div style="margin-bottom: 6px;"><strong>🛡️ Precautions:</strong> {{ report.precautions | join(', ') }}
+                </div>
+                <div><strong>🥗 Diet:</strong> {{ report.diet | join(', ') }}</div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="no-records">
+            <h3>No diagnosis history found.</h3>
+            <p>Run your first medical assessment on the diagnosis page while logged in to track reports here.</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+
+</html>

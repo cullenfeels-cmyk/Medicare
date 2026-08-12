@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Portal Access - MediCare AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #eef7ff 0%, #f8fbff 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .auth-container {
+            background: white;
+            width: 100%;
+            max-width: 420px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+
+        /* Tab Switcher Header */
+        .auth-tabs {
+            display: flex;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 18px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 15px;
+            color: #64748b;
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .tab-btn.active {
+            color: #1677ff;
+            background: white;
+            border-bottom: 2px solid #1677ff;
+        }
+
+        /* Form Body */
+        .auth-body {
+            padding: 35px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1677ff;
+            text-align: center;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo span {
+            color: #12b886;
+        }
+
+        .form-panel {
+            display: none;
+        }
+
+        .form-panel.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            color: #12355b;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #dbe4ef;
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+            background: #f8fafc;
+        }
+
+        .input-group input:focus {
+            border-color: #1677ff;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.08);
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #1677ff, #0ea5e9);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(22, 119, 255, 0.25);
+        }
+
+        .alert-msg {
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .error-msg {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
+        }
+
+        .success-msg {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
+        }
+
+        .back-home {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+
+        .back-home a {
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-home a:hover {
+            color: #1677ff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="auth-container">
+        <!-- Interactive Tabs -->
+        <div class="auth-tabs">
+            <button class="tab-btn active" onclick="switchTab('login')">Sign In</button>
+            <button class="tab-btn" onclick="switchTab('register')">Register</button>
+        </div>
+
+        <div class="auth-body">
+            <div class="logo">⚕️ MediCare <span>AI</span></div>
+
+            <!-- LOGIN PANEL -->
+            <div id="loginPanel" class="form-panel active">
+                <div class="alert-msg error-msg" id="loginError"></div>
+                <form id="loginForm">
+                    <div class="input-group">
+                        <label>Email Address</label>
+                        <input type="email" id="loginEmail" required placeholder="name@example.com">
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" required placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="submit-btn">Login to Portal</button>
+                </form>
+            </div>
+
+            <!-- REGISTER PANEL -->
+            <div id="registerPanel" class="form-panel">
+                <div class="alert-msg error-msg" id="regError"></div>
+                <div class="alert-msg success-msg" id="regSuccess"></div>
+                <form id="registerForm">
+                    <div class="input-group">
+                        <label>Username</label>
+                        <input type="text" id="regUsername" required placeholder="John Doe">
+                    </div>
+                    <div class="input-group">
+                        <label>Email Address</label>
+                        <input type="email" id="regEmail" required placeholder="name@example.com">
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <input type="password" id="regPassword" required placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="submit-btn">Create Account</button>
+                </form>
+            </div>
+
+            <div class="back-home">
+                <a href="/">← Return to Diagnosis Portal</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check if user has visited before on this device
+        window.addEventListener('DOMContentLoaded', () => {
+            const hasVisitedBefore = localStorage.getItem('medicare_visited');
+
+            if (!hasVisitedBefore) {
+                // First-time user: Force Register tab & save flag
+                switchTab('register');
+                localStorage.setItem('medicare_visited', 'true');
+            } else {
+                // Returning user: Default to Sign In tab
+                switchTab('login');
+            }
+        });
+
+        // Tab switching logic
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.form-panel').forEach(panel => panel.classList.remove('active'));
+
+            if (tab === 'login') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('loginPanel').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('registerPanel').classList.add('active');
+            }
+        }
+
+        // Login Handler
+        document.getElementById("loginForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const email = document.getElementById("loginEmail").value;
+            const password = document.getElementById("loginPassword").value;
+            const errorBox = document.getElementById("loginError");
+            errorBox.style.display = "none";
+
+            try {
+                const response = await fetch("/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    // Save login state for device recognition
+                    localStorage.setItem('medicare_visited', 'true');
+                    window.location.href = "/dashboard";
+                } else {
+                    errorBox.innerText = data.message || "Invalid credentials.";
+                    errorBox.style.display = "block";
+                }
+            } catch (err) {
+                errorBox.innerText = "Connection error. Please try again.";
+                errorBox.style.display = "block";
+            }
+        });
+
+        // Register Handler
+        document.getElementById("registerForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const username = document.getElementById("regUsername").value;
+            const email = document.getElementById("regEmail").value;
+            const password = document.getElementById("regPassword").value;
+            const errorBox = document.getElementById("regError");
+            const successBox = document.getElementById("regSuccess");
+            errorBox.style.display = "none";
+            successBox.style.display = "none";
+
+            try {
+                const response = await fetch("/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, email, password })
+                });
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    successBox.innerText = data.message;
+                    successBox.style.display = "block";
+                    localStorage.setItem('medicare_visited', 'true');
+                    setTimeout(() => { switchTab('login'); }, 1500);
+                } else {
+                    errorBox.innerText = data.message || "Registration failed.";
+                    errorBox.style.display = "block";
+                }
+            } catch (err) {
+                errorBox.innerText = "Connection error. Please try again.";
+                errorBox.style.display = "block";
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Login - MediCare AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #eef7ff 0%, #f8fbff 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .auth-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 35px rgba(15, 23, 42, 0.08);
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .logo {
+            font-size: 26px;
+            font-weight: 700;
+            color: #1677ff;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .logo span {
+            color: #12b886;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            color: #12355b;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #dbe4ef;
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+            background: #f8fafc;
+        }
+
+        .input-group input:focus {
+            border-color: #1677ff;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.08);
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #1677ff, #0ea5e9);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(22, 119, 255, 0.25);
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .auth-footer a {
+            color: #1677ff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .error-msg {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="auth-card">
+        <div class="logo">MediCare <span>AI</span></div>
+        <div class="error-msg" id="errorBox"></div>
+        <form id="loginForm">
+            <div class="input-group">
+                <label>Email Address</label>
+                <input type="email" id="email" required placeholder="name@example.com">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="password" required placeholder="••••••••">
+            </div>
+            <button type="submit" class="submit-btn">Login</button>
+        </form>
+        <div class="auth-footer">
+            Don't have an account? <a href="/register">Register here</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("loginForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const errorBox = document.getElementById("errorBox");
+            errorBox.style.display = "none";
+
+            try {
+                const response = await fetch("/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    window.location.href = "/dashboard";
+                } else {
+                    errorBox.innerText = data.message || "Invalid credentials.";
+                    errorBox.style.display = "block";
+                }
+            } catch (err) {
+                errorBox.innerText = "Connection error. Please try again.";
+                errorBox.style.display = "block";
+            }
+        });
+    </script>
+</body>
+
+</html>
