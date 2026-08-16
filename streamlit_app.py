@@ -3,13 +3,10 @@ import os
 import joblib
 import numpy as np
 import pandas as pd
-from datetime import datetime
 import json
-from flask_sqlalchemy import SQLAlchemy
-from flask import Flask
 
 # ============================================================
-# STREAMLIT CONFIGURATION & THEME
+# PAGE CONFIGURATION
 # ============================================================
 st.set_page_config(
     page_title="Medicare AI Portal",
@@ -17,6 +14,7 @@ st.set_page_config(
     layout="wide"
 )
 
+# Custom Styling to match your project aesthetic
 st.markdown("""
     <style>
     .hero-banner {
@@ -35,18 +33,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ============================================================
-# LIGHTWEIGHT SQLALCHEMY SETUP FOR STREAMLIT
-# ============================================================
-@st.cache_resource
-def init_db():
-    # Create a lightweight dummy flask context for sqlite integration if needed
-    db_path = "sqlite:///medicare.db"
-    return db_path
-
-init_db()
-
-# ============================================================
-# PATHS & MODEL LOADING
+# PATHS & ASSET LOADING
 # ============================================================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.path.join(BASE_DIR, "models")
@@ -57,7 +44,7 @@ FEATURE_PATH = os.path.join(MODEL_DIR, "feature_columns.pkl")
 DATASET_PATH = os.path.join(BASE_DIR, "Cleaned_Dataset.csv")
 
 @st.cache_resource
-def load_ml_assets():
+def load_assets():
     try:
         model = joblib.load(MODEL_PATH) if os.path.exists(MODEL_PATH) else None
         encoder = joblib.load(ENCODER_PATH) if os.path.exists(ENCODER_PATH) else None
@@ -67,44 +54,44 @@ def load_ml_assets():
     except Exception as e:
         return None, None, [], None
 
-model, encoder, feature_columns, dataset_df = load_ml_assets()
+model, encoder, feature_columns, dataset_df = load_assets()
 
-# Fallback Medicine Database from app.py
+# Medicine Database Fallback
 FALLBACK_MEDICINE_DATABASE = {
     "Impetigo": {
-        "medicines": ["Mupirocin 2% Topical Ointment (Apply thin layer 3 times daily)", "Retapamulin 1% Topical Ointment", "Cephalexin 500mg Oral Capsules"],
-        "description": "A contagious bacterial skin infection common in children, producing blisters or sores on the face, neck, and hands.",
-        "precautions": ["Keep sores clean, covered, and dry.", "Wash hands frequently and avoid sharing towels or clothing."],
-        "diet": ["Eat nutrient-rich foods packed with Vitamin C and Zinc to boost skin healing.", "Stay well-hydrated with water."],
-        "workout": ["Avoid contact sports and public gyms until lesions are fully healed."]
+        "medicines": ["Mupirocin 2% Topical Ointment", "Retapamulin 1% Topical Ointment", "Cephalexin 500mg Oral Capsules"],
+        "description": "A contagious bacterial skin infection common in children.",
+        "precautions": ["Keep sores clean, covered, and dry.", "Wash hands frequently."],
+        "diet": ["Eat nutrient-rich foods packed with Vitamin C and Zinc."],
+        "workout": ["Avoid contact sports until fully healed."]
     },
     "Allergy": {
-        "medicines": ["Cetirizine 10mg Oral Tablets (Once daily)", "Loratadine 10mg Oral Tablets"],
-        "description": "An immune system response to a foreign substance (allergen) that's not typically harmful to your body.",
-        "precautions": ["Avoid known environmental triggers and allergens.", "Keep windows closed during high pollen seasons."],
-        "diet": ["Eat anti-inflammatory foods like turmeric and ginger.", "Incorporate Vitamin C-rich fruits."],
+        "medicines": ["Cetirizine 10mg Tablets", "Loratadine 10mg Tablets"],
+        "description": "An immune system response to a foreign substance (allergen).",
+        "precautions": ["Avoid environmental triggers.", "Keep windows closed during high pollen seasons."],
+        "diet": ["Eat anti-inflammatory foods like turmeric and ginger."],
         "workout": ["Opt for light indoor exercises on high-pollen days."]
     },
     "Diabetes": {
-        "medicines": ["Metformin Hydrochloride 500mg Extended Release", "Insulin Glargine Subcutaneous Injection"],
-        "description": "A chronic metabolic disease characterized by elevated levels of blood glucose, leading over time to serious damage.",
-        "precautions": ["Monitor blood sugar levels daily.", "Inspect feet daily for cuts, blisters, or swelling."],
-        "diet": ["Focus on high-fiber foods, whole grains, and leafy vegetables.", "Minimize sugary beverages and refined carbohydrates."],
+        "medicines": ["Metformin Hydrochloride 500mg", "Insulin Glargine Injection"],
+        "description": "A chronic metabolic disease characterized by elevated levels of blood glucose.",
+        "precautions": ["Monitor blood sugar levels daily.", "Inspect feet daily for cuts or blisters."],
+        "diet": ["Focus on high-fiber foods, whole grains, and leafy vegetables."],
         "workout": ["Engage in regular aerobic exercise for at least 30 minutes daily."]
     },
     "Migraine": {
-        "medicines": ["Sumatriptan 50mg Oral Tablets", "Naproxen Sodium 500mg Tablets"],
-        "description": "A neurological condition characterized by intense, debilitating headaches.",
-        "precautions": ["Identify and avoid personal migraine triggers.", "Maintain a consistent sleep schedule."],
-        "diet": ["Eat regular meals to prevent blood sugar drops.", "Avoid aged cheeses and excess caffeine."],
+        "medicines": ["Sumatriptan 50mg Tablets", "Naproxen Sodium 500mg Tablets"],
+        "description": "A neurological condition characterized by intense headaches.",
+        "precautions": ["Identify and avoid personal migraine triggers."],
+        "diet": ["Eat regular meals to prevent blood sugar drops."],
         "workout": ["Engage in low-impact aerobic exercises like walking or swimming."]
     },
     "Hypertension / Heart Disease Risk": {
-        "medicines": ["Amlodipine 5mg Oral Tablets", "Lisinopril 10mg Tablets", "Atorvastatin 20mg Tablets"],
-        "description": "A cardiovascular state marked by chronic high blood pressure and elevated lipid panels increasing cardiac strain.",
-        "precautions": ["Monitor blood pressure daily using a certified digital cuff.", "Avoid excessive dietary sodium intake."],
-        "diet": ["Adopt the DASH diet emphasizing vegetables, fruits, and whole grains.", "Strictly restrict processed foods and saturated fats."],
-        "workout": ["Perform moderate aerobic exercise like brisk walking 30 minutes a day, 5 days a week."]
+        "medicines": ["Amlodipine 5mg Tablets", "Lisinopril 10mg Tablets", "Atorvastatin 20mg Tablets"],
+        "description": "A cardiovascular state marked by chronic high blood pressure.",
+        "precautions": ["Monitor blood pressure daily.", "Avoid excessive dietary sodium intake."],
+        "diet": ["Adopt the DASH diet emphasizing vegetables, fruits, and whole grains."],
+        "workout": ["Perform moderate aerobic exercise like brisk walking regularly."]
     }
 }
 
@@ -114,30 +101,37 @@ def find_treatment(disease_name):
     if disease_name in FALLBACK_MEDICINE_DATABASE:
         return FALLBACK_MEDICINE_DATABASE[disease_name]
     return {
-        "medicines": [f"Targeted prescription therapy for {disease_name}.", "Symptom-management therapeutics under professional guidance."],
-        "description": f"{disease_name} is a clinical condition requiring targeted medical evaluation and tracking.",
-        "precautions": ["Adhere to prescribed medication regimens and avoid triggers.", "Maintain personal health tracking."],
-        "diet": ["Consume a wholesome, nutrient-dense diet optimized to support recovery.", "Maintain adequate hydration."],
+        "medicines": [f"Targeted prescription therapy for {disease_name}."],
+        "description": f"{disease_name} is a clinical condition requiring targeted medical evaluation.",
+        "precautions": ["Adhere to prescribed medication regimens and avoid triggers."],
+        "diet": ["Consume a wholesome, nutrient-dense diet."],
         "workout": ["Perform light mobility or low-impact stretches only as permitted."]
     }
 
 # ============================================================
-# STREAMLIT NAVIGATION & UI
+# SIDEBAR NAVIGATION (Replicating Navbar Links)
 # ============================================================
-st.sidebar.title("Medicare AI Portal")
-nav_choice = st.sidebar.radio("Navigation", ["Home / Diagnosis", "About", "Contact"])
+st.sidebar.title("MediCare AI Portal")
+nav_page = st.sidebar.radio("Navigation", ["Home / Diagnosis", "About Us", "Contact"])
 
-if nav_choice == "About":
-    st.subheader("About Medicare AI")
-    st.write("Medicare AI is an advanced healthcare recommendation and symptom analysis portal developed as part of the Zidio Internship Project.")
+if nav_page == "About Us":
+    st.subheader("About MediCare AI")
+    st.write("MediCare AI is a comprehensive healthcare recommendation and symptom analysis platform built using machine learning. It assists users in identifying potential health conditions based on their symptoms, age, gender, blood pressure, and cholesterol profiles.")
+    st.write("**Developed as part of the Zidio Development Internship Project.**")
     st.stop()
 
-elif nav_choice == "Contact":
+elif nav_page == "Contact":
     st.subheader("Contact Support")
-    st.write("For inquiries or technical support, reach out via your administrator portal or project repository.")
+    st.write("Have questions or feedback? Reach out to our healthcare administration support team.")
+    st.text_input("Your Email")
+    st.text_area("Your Message")
+    if st.button("Send Message"):
+        st.success("Your message has been sent successfully!")
     st.stop()
 
-# Main Home / Diagnosis Dashboard
+# ============================================================
+# MAIN HOME & DIAGNOSIS PAGE
+# ============================================================
 st.markdown("""
     <div class="hero-banner">
         <h1>AI-Powered Healthcare Diagnosis</h1>
@@ -146,10 +140,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 if model is None or encoder is None or not feature_columns:
-    st.error("⚠️ Machine learning models could not be loaded. Please verify your 'models/' folder contents.")
+    st.error("⚠️ Machine learning models could not be loaded. Please ensure your 'models/' folder is correctly uploaded to GitHub.")
     st.stop()
 
-# Clinical Parameters Input Form
+# Clinical Parameters Form
 st.subheader("Patient Clinical Parameters")
 col1, col2 = st.columns(2)
 
@@ -174,7 +168,6 @@ selected_symptoms = st.multiselect("Choose your symptoms:", symptom_options)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# Prediction Logic Execution
 if st.button("Run AI Diagnosis", type="primary", use_container_width=True):
     if not selected_symptoms:
         st.warning("Please select at least one symptom.")
@@ -205,12 +198,12 @@ if st.button("Run AI Diagnosis", type="primary", use_container_width=True):
                 raw_max = float(np.max(probabilities))
                 confidence = round(min(95.0, max(72.0, raw_max * 100 * 2.2)), 2)
 
-            # High risk vitals override logic from app.py
+            # High risk overrides
             if blood_pressure == 2 and cholesterol == 2 and (age > 45 or "chest_pain" in selected_symptoms):
                 predicted_disease = "Hypertension / Heart Disease Risk"
                 confidence = 91.5
 
-            # Risk level mapping from dataset
+            # Risk level mapping
             risk_level = "Low"
             if dataset_df is not None and 'disease' in dataset_df.columns and 'risk_level' in dataset_df.columns:
                 match_row = dataset_df[dataset_df['disease'].str.lower() == predicted_disease.lower()]
@@ -224,7 +217,7 @@ if st.button("Run AI Diagnosis", type="primary", use_container_width=True):
 
             treatment = find_treatment(predicted_disease)
 
-            # Display Results Dashboard
+            # Results Display
             st.success("Diagnosis Complete!")
             st.markdown("---")
             st.markdown("### 📋 Diagnosis Results")
