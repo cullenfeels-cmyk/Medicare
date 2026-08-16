@@ -3,15 +3,14 @@ import os
 import joblib
 import numpy as np
 import pandas as pd
+import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Medicare AI Portal", page_icon="🏥", layout="wide")
-
-st.title("🏥 Medicare AI - Healthcare Portal")
-st.write("Welcome to your live AI health diagnosis portal!")
 
 # Paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.path.join(BASE_DIR, "models")
+TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
 
 MODEL_PATH = os.path.join(MODEL_DIR, "best_model.pkl")
 ENCODER_PATH = os.path.join(MODEL_DIR, "disease_encoder.pkl")
@@ -27,11 +26,11 @@ def load_assets():
         dataset_df = pd.read_csv(DATASET_PATH) if os.path.exists(DATASET_PATH) else None
         return model, encoder, feature_columns, dataset_df
     except Exception as e:
-        st.error(f"Error loading assets: {e}")
         return None, None, [], None
 
 model, encoder, feature_columns, dataset_df = load_assets()
 
+# Medicine Database Fallback
 FALLBACK_MEDICINE_DATABASE = {
     "Fungal infection": {
         "medicines": ["Clotrimazole 1% Topical Cream", "Ketoconazole 2% Medicated Shampoo"],
@@ -70,80 +69,111 @@ def find_treatment(disease_name):
         "workout": ["Perform light mobility or low-impact stretches only as permitted."]
     }
 
-if model is None:
-    st.warning("Models are missing. Please check your 'models/' folder on GitHub.")
-else:
-    st.success("Models loaded successfully!")
+# ============================================================
+# NAVIGATION MENU
+# ============================================================
+st.sidebar.title("MediCare Portal Navigation")
+choice = st.sidebar.selectbox(
+    "Select Page:",
+    ["Home / AI Diagnosis", "About Template", "Contact Template", "Authentication Template", "User Dashboard Template", "Admin Dashboard Template"]
+)
+
+if choice == "Home / AI Diagnosis":
+    st.title("🏥 AI-Powered Healthcare Diagnosis")
+    st.write("Advanced machine learning algorithms analyze your clinical parameters and symptoms to provide accurate disease predictions.")
     
-    col1, col2 = st.columns(2)
-    with col1:
-        age = st.slider("Age", 1, 100, 30)
-        gender_str = st.selectbox("Gender", ["Female", "Male"])
-        gender = 1 if gender_str == "Male" else 0
-    with col2:
-        bp_str = st.selectbox("Blood Pressure", ["Low", "Normal", "High"], index=1)
-        bp_val = {"Low": 0, "Normal": 1, "High": 2}[bp_str]
+    if model is None:
+        st.warning("Models are loading or missing from the 'models/' folder.")
+    else:
+        col1, col2 = st.columns(2)
+        with col1:
+            age = st.slider("Age", 1, 100, 30)
+            gender_str = st.selectbox("Gender", ["Female", "Male"])
+            gender = 1 if gender_str == "Male" else 0
+        with col2:
+            bp_str = st.selectbox("Blood Pressure", ["Low", "Normal", "High"], index=1)
+            bp_val = {"Low": 0, "Normal": 1, "High": 2}[bp_str]
+            
+            chol_str = st.selectbox("Cholesterol Level", ["Low", "Normal", "High"], index=1)
+            chol_val = {"Low": 0, "Normal": 1, "High": 2}[chol_str]
+
+        symptom_options = [col for col in feature_columns if col not in ["age", "gender", "blood_pressure", "cholesterol"]]
+        selected_symptoms = st.multiselect("Select Symptoms", symptom_options)
         
-        chol_str = st.selectbox("Cholesterol Level", ["Low", "Normal", "High"], index=1)
-        chol_val = {"Low": 0, "Normal": 1, "High": 2}[chol_str]
+        if st.button("Run AI Diagnosis", type="primary"):
+            if not selected_symptoms:
+                st.warning("Please select at least one symptom.")
+            else:
+                with st.spinner("Running AI Prediction..."):
+                    input_features = np.zeros(len(feature_columns), dtype=int)
+                    for s in selected_symptoms:
+                        if s in feature_columns:
+                            input_features[feature_columns.index(s)] = 1
+                    
+                    for f_name, f_val in [("age", age), ("gender", gender), ("blood_pressure", bp_val), ("cholesterol", chol_val)]:
+                        if f_name in feature_columns:
+                            input_features[feature_columns.index(f_name)] = f_val
 
-    symptom_options = [col for col in feature_columns if col not in ["age", "gender", "blood_pressure", "cholesterol"]]
-    selected_symptoms = st.multiselect("Select Symptoms", symptom_options)
+                    input_df = pd.DataFrame([input_features], columns=feature_columns)
+                    pred = model.predict(input_df)[0]
+                    disease = str(encoder.inverse_transform([pred])[0])
+                    
+                    confidence = 88.5
+                    if hasattr(model, "predict_proba"):
+                        probs = model.predict_proba(input_df)[0]
+                        confidence = round(float(np.max(probs)) * 100 * 1.8, 2)
+                        confidence = min(96.0, max(75.0, confidence))
+
+                    risk_level = "Medium"
+                    if dataset_df is not None and 'disease' in dataset_df.columns and 'risk_level' in dataset_df.columns:
+                        match_row = dataset_df[dataset_df['disease'].str.lower() == disease.lower()]
+                        if not match_row.empty:
+                            risk_level = str(match_row.iloc[0]['risk_level'])
+
+                    treatment = find_treatment(disease)
+
+                    st.success("Diagnosis Complete!")
+                    st.markdown("---")
+                    
+                    r1, r2, r3 = st.columns(3)
+                    r1.metric("Predicted Condition", disease)
+                    r2.metric("Model Confidence", f"{confidence}%")
+                    r3.metric("Risk Level", risk_level.upper())
+
+                    st.info(f"**Description:** {treatment.get('description')}")
+
+                    with st.expander("💊 Recommended Medications", expanded=True):
+                        for med in treatment.get("medicines", []):
+                            st.markdown(f"- {med}")
+
+                    with st.expander("🛡️ Precautions & Safety", expanded=False):
+                        for prec in treatment.get("precautions", []):
+                            st.markdown(f"- {prec}")
+
+                    with st.expander("🥗 Recommended Diet", expanded=False):
+                        for d in treatment.get("diet", []):
+                            st.markdown(f"- {d}")
+
+                    with st.expander("🏃 Workout Guidelines", expanded=False):
+                        for w in treatment.get("workout", []):
+                            st.markdown(f"- {w}")
+
+else:
+    # Map selection to original HTML files in templates/ folder
+    template_mapping = {
+        "About Template": "about.html",
+        "Contact Template": "contact.html",
+        "Authentication Template": "auth.html",
+        "User Dashboard Template": "dashboard.html",
+        "Admin Dashboard Template": "admin.html"
+    }
     
-    if st.button("Run AI Diagnosis", type="primary"):
-        if not selected_symptoms:
-            st.warning("Please select at least one symptom.")
-        else:
-            with st.spinner("Running AI Prediction..."):
-                input_features = np.zeros(len(feature_columns), dtype=int)
-                for s in selected_symptoms:
-                    if s in feature_columns:
-                        input_features[feature_columns.index(s)] = 1
-                
-                for f_name, f_val in [("age", age), ("gender", gender), ("blood_pressure", bp_val), ("cholesterol", chol_val)]:
-                    if f_name in feature_columns:
-                        input_features[feature_columns.index(f_name)] = f_val
-
-                input_df = pd.DataFrame([input_features], columns=feature_columns)
-                pred = model.predict(input_df)[0]
-                disease = str(encoder.inverse_transform([pred])[0])
-                
-                confidence = 88.5
-                if hasattr(model, "predict_proba"):
-                    probs = model.predict_proba(input_df)[0]
-                    confidence = round(float(np.max(probs)) * 100 * 1.8, 2)
-                    confidence = min(96.0, max(75.0, confidence))
-
-                risk_level = "Medium"
-                if dataset_df is not None and 'disease' in dataset_df.columns and 'risk_level' in dataset_df.columns:
-                    match_row = dataset_df[dataset_df['disease'].str.lower() == disease.lower()]
-                    if not match_row.empty:
-                        risk_level = str(match_row.iloc[0]['risk_level'])
-
-                treatment = find_treatment(disease)
-
-                st.success("Diagnosis Complete!")
-                st.markdown("---")
-                
-                r1, r2, r3 = st.columns(3)
-                r1.metric("Predicted Condition", disease)
-                r2.metric("Model Confidence", f"{confidence}%")
-                r3.metric("Risk Level", risk_level.upper())
-
-                st.info(f"**Description:** {treatment.get('description')}")
-
-                with st.expander("💊 Recommended Medications", expanded=True):
-                    for med in treatment.get("medicines", []):
-                        st.markdown(f"- {med}")
-
-                with st.expander("🛡️ Precautions & Safety", expanded=False):
-                    for prec in treatment.get("precautions", []):
-                        st.markdown(f"- {prec}")
-
-                with st.expander("🥗 Recommended Diet", expanded=False):
-                    for d in treatment.get("diet", []):
-                        st.markdown(f"- {d}")
-
-                with st.expander("🏃 Workout Guidelines", expanded=False):
-                    for w in treatment.get("workout", []):
-                        st.markdown(f"- {w}")
+    filename = template_mapping.get(choice)
+    file_path = os.path.join(TEMPLATE_DIR, filename)
+    
+    if os.path.exists(file_path):
+        with open(file_path, "r", encoding="utf-8") as f:
+            html_content = f.read()
+        components.html(html_content, height=850, scrolling=True)
+    else:
+        st.error(f"Template file '{filename}' not found in the 'templates/' folder.")
