@@ -159,7 +159,6 @@ if choice == "Home / AI Diagnosis":
                             st.markdown(f"- {w}")
 
 else:
-    # Map selection to original HTML files in templates/ folder
     template_mapping = {
         "About Template": "about.html",
         "Contact Template": "contact.html",
@@ -174,6 +173,12 @@ else:
     if os.path.exists(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
             html_content = f.read()
+        
+        # Clean out Flask/Jinja2 tags so they don't appear as text artifacts
+        import re
+        html_content = re.sub(r'\{%.*?%\}', '', html_content)
+        html_content = re.sub(r'\{\{.*?\}\}', '', html_content)
+        
         components.html(html_content, height=850, scrolling=True)
     else:
         st.error(f"Template file '{filename}' not found in the 'templates/' folder.")
